@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>我的用量</title>
+<style>
+:root {
+  --paper: #f6f5f2;
+  --card: #ffffff;
+  --ink: #17202b;
+  --ink-soft: #4a5568;
+  --muted: #8b93a1;
+  --line: #e2e0da;
+  --line-strong: #cfccc4;
+  --seal: #a8342a;
+  --jade: #1f6f5c;
+  --blue: #24476b;
+  --wash: #efece5;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { color-scheme: light; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "PingFang SC", "Hiragino Sans GB", "Songti SC", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+/* ---------- login ---------- */
+#login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card {
+  width: 100%; max-width: 420px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 40px 36px 32px;
+  box-shadow: 0 1px 2px rgba(23,32,43,.04), 0 12px 32px -18px rgba(23,32,43,.18);
+}
+.brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.brand svg { width: 26px; height: 26px; flex: none; }
+.brand .word { font-size: 16px; font-weight: 600; letter-spacing: .02em; }
+.brand .word small { color: var(--muted); font-weight: 400; margin-left: 6px; font-size: 13px; }
+.login-card h1 { font-size: 21px; font-weight: 600; margin-bottom: 6px; }
+.login-card .lede { color: var(--ink-soft); font-size: 14px; margin-bottom: 26px; }
+label.field { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 7px; }
+input[type=password], input[type=text] {
+  width: 100%; padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  background: #fdfdfb;
+  color: var(--ink);
+  font-size: 14px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  border-radius: 2px;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,71,107,.10); }
+.remember { display: flex; align-items: center; gap: 8px; margin: 14px 0 22px; font-size: 13.5px; color: var(--ink-soft); }
+.remember input { accent-color: var(--blue); width: 15px; height: 15px; }
+button.primary {
+  width: 100%; padding: 12px;
+  background: var(--ink);
+  color: #fff;
+  border: none;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background .15s;
+}
+button.primary:hover { background: #2b3949; }
+button.primary:disabled { opacity: .55; cursor: default; }
+.form-err {
+  margin-top: 14px; padding: 10px 12px;
+  background: #fbf0ee; border-left: 3px solid var(--seal);
+  color: var(--seal); font-size: 13.5px; display: none;
+}
+.hint { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12.5px; }
+.hint code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background: var(--wash); padding: 1px 5px; border-radius: 2px; }
+
+/* ---------- dashboard ---------- */
+#dash { display: none; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 2px solid var(--ink); }
+.topbar .who { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.topbar .who .name { font-size: 20px; font-weight: 600; }
+.badge { font-size: 11.5px; padding: 2px 8px; border-radius: 2px; border: 1px solid var(--line-strong); color: var(--ink-soft); }
+.badge.ro { border-color: #c9b8a8; color: #7a6248; background: #faf6ef; }
+.badge.full { border-color: #b7cec6; color: var(--jade); background: #f1f7f4; }
+.logout { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 4px; }
+.logout:hover { color: var(--ink); }
+
+.period-tabs { display: flex; gap: 2px; margin: 26px 0 8px; border-bottom: 1px solid var(--line); }
+.period-tabs button {
+  background: none; border: none; cursor: pointer;
+  padding: 8px 16px 10px; font-size: 14px; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+}
+.period-tabs button.on { color: var(--ink); border-bottom-color: var(--ink); font-weight: 500; }
+.period-tabs button:hover { color: var(--ink); }
+
+.hero { display: flex; align-items: flex-end; gap: 24px; flex-wrap: wrap; padding: 22px 0 6px; }
+.hero .cost { font-size: clamp(42px, 8vw, 64px); font-weight: 300; letter-spacing: -.02em; line-height: 1; color: var(--ink); font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.hero .cost .sym { font-size: .42em; color: var(--muted); margin-right: 4px; vertical-align: .55em; }
+.hero .aside { color: var(--ink-soft); font-size: 13.5px; padding-bottom: 6px; }
+.hero .aside b { color: var(--ink); font-weight: 500; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0; margin-top: 22px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.stats .cell { padding: 14px 18px 13px 0; }
+.stats .k { font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+.stats .v { font-size: 18px; font-family: ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+.stats .v.bad { color: var(--seal); }
+
+.trend-note { font-size: 12px; color: var(--muted); margin: -6px 0 12px; }
+.trend-wrap { position: relative; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 14px 0 6px; }
+.trend-chart { position: relative; height: 190px; }
+.trend-chart svg { display: block; width: 100%; height: 100%; }
+.trend-peak { position: absolute; top: 10px; right: 2px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--muted); }
+.trend-axis { display: flex; justify-content: space-between; margin-top: 6px; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--muted); }
+.trend-tip {
+  position: absolute; pointer-events: none; opacity: 0; transition: opacity .12s;
+  background: var(--ink); color: #fff; font-size: 12px; line-height: 1.5;
+  padding: 6px 9px; border-radius: 3px; white-space: nowrap; transform: translate(-50%, -110%);
+  z-index: 3;
+}
+.trend-tip.on { opacity: 1; }
+.trend-tip b { font-family: ui-monospace, Menlo, monospace; font-weight: 500; }
+.trend-hover-line { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; vector-effect: non-scaling-stroke; }
+.trend-hover-line.on { opacity: 1; }
+.trend-dot { fill: var(--jade); stroke: var(--card); stroke-width: 2; opacity: 0; }
+.trend-dot.on { opacity: 1; }
+
+section { margin-top: 40px; }
+h2 { font-size: 13px; font-weight: 600; color: var(--ink-soft); letter-spacing: .06em; margin-bottom: 12px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 8px 10px 8px 0; border-bottom: 1px solid var(--line-strong); }
+th.num, td.num { text-align: right; font-family: ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+td { padding: 11px 10px 11px 0; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: none; }
+.model-name { font-weight: 500; }
+.model-sub { color: var(--muted); font-size: 12px; }
+.bar { position: relative; height: 3px; background: var(--wash); margin-top: 6px; max-width: 220px; }
+.bar i { position: absolute; inset: 0 auto 0 0; background: var(--jade); }
+.empty { color: var(--muted); font-size: 13.5px; padding: 18px 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font-size: 12.5px; padding: 4px 10px; background: var(--card); border: 1px solid var(--line); border-radius: 2px; color: var(--ink-soft); font-family: ui-monospace, Menlo, monospace; }
+.limits { max-width: 560px; }
+.limits li { list-style: none; padding: 16px 0; border-bottom: 1px solid var(--line); }
+.limits li:last-child { border-bottom: none; }
+.limit-head { font-size: 13px; color: var(--ink-soft); margin-bottom: 10px; }
+.limit-spent { color: var(--seal); margin-left: 8px; font-weight: 500; }
+.limit-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.limit-num { font-size: 24px; font-weight: 500; font-family: ui-monospace, Menlo, monospace; }
+.limit-of { color: var(--muted); font-size: 14px; font-family: ui-monospace, Menlo, monospace; }
+.limit-left { margin-left: auto; font-size: 13px; color: var(--ink-soft); }
+.limit-bar { height: 6px; background: var(--wash); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.limit-bar i { display: block; height: 100%; background: var(--jade); border-radius: 3px; }
+.limit-bar i.hot { background: var(--seal); }
+.limit-meta { font-size: 12.5px; color: var(--muted); }
+
+footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.loading { color: var(--muted); padding: 60px 0; text-align: center; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (max-width: 560px) {
+  .wrap { padding: 28px 18px 60px; }
+  .login-card { padding: 30px 22px 24px; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stats .cell { padding-right: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="login-card">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 18c3-7 6-10 8-10s5 3 8 10" stroke="#17202b" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7" r="2.2" fill="#a8342a"/></svg>
+      <span class="word">用量查询</span>
+    </div>
+    <h1>查看我的用量</h1>
+    <p class="lede">输入你的 API 密钥，查看调用量、消耗和可用模型。</p>
+    <label class="field" for="key">API 密钥</label>
+    <input id="key" type="password" placeholder="sk-…" autocomplete="off" spellcheck="false">
+    <div class="remember">
+      <input id="remember" type="checkbox">
+      <label for="remember">在这台设备上记住密钥</label>
+    </div>
+    <button class="primary" id="enter">查看用量</button>
+    <div class="form-err" id="err"></div>
+    <p class="hint">密钥由管理员发放。它只用于查询你自己的用量，不会发送到除本站以外的任何地方。</p>
+  </div>
+</div>
+
+<div id="dash" class="wrap">
+  <div class="topbar">
+    <div class="who">
+      <span class="name" id="kname">—</span>
+      <span class="badge" id="kaccess">—</span>
+    </div>
+    <button class="logout" id="logout">退出</button>
+  </div>
+
+  <div class="period-tabs" role="tablist">
+    <button data-period="today" role="tab">今天</button>
+    <button class="on" data-period="7d" role="tab">近 7 天</button>
+    <button data-period="30d" role="tab">近 30 天</button>
+  </div>
+
+  <div class="hero">
+    <div class="cost"><span class="sym">¥</span><span id="cost">0</span></div>
+    <div class="aside" id="cost-sub">—</div>
+  </div>
+
+  <div class="stats">
+    <div class="cell"><div class="k">调用次数</div><div class="v" id="s-calls">—</div></div>
+    <div class="cell"><div class="k">输入 tokens</div><div class="v" id="s-in">—</div></div>
+    <div class="cell"><div class="k">输出 tokens</div><div class="v" id="s-out">—</div></div>
+    <div class="cell"><div class="k">缓存读取</div><div class="v" id="s-cache">—</div></div>
+    <div class="cell"><div class="k">失败请求</div><div class="v" id="s-err">—</div></div>
+  </div>
+
+  <section id="sec-trend">
+    <h2>用量趋势</h2>
+    <div class="trend-note" id="trend-note">按天统计消耗</div>
+    <div class="trend-wrap" id="trend"><div class="empty">读取中…</div></div>
+  </section>
+
+  <section id="sec-models">
+    <h2>模型用量</h2>
+    <table>
+      <thead><tr><th>模型</th><th class="num">调用</th><th class="num">tokens 入 / 出</th><th class="num">消耗</th></tr></thead>
+      <tbody id="models"></tbody>
+    </table>
+  </section>
+
+  <section id="sec-models-avail">
+    <h2>可用模型</h2>
+    <div class="chips" id="allowed"></div>
+  </section>
+
+  <section id="sec-limits" style="display:none">
+    <h2>本期额度</h2>
+    <ul class="limits" id="limits"></ul>
+  </section>
+
+  <footer>
+    <span>仅显示本密钥的用量</span>
+    <span class="mono" id="foot-meta">—</span>
+  </footer>
+</div>
+
+<script>
+const CNY = 6.68;   // 与 magpie 的 USD→CNY 汇率保持一致
+const fmtN = n => {
+  n = Number(n || 0);
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + "B";
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
+  return String(Math.round(n));
+};
+const fmtMoney = usd => Number(usd || 0).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => { const d = document.createElement("div"); d.textContent = String(s ?? ""); return d.innerHTML; };
+
+const KEY_MEM = "mg_usage_key";
+const keyInput = document.getElementById("key");
+const errBox = document.getElementById("err");
+let state = { key: "", data: null, period: "7d" };
+
+function getStoredKey() {
+  return localStorage.getItem(KEY_MEM) || sessionStorage.getItem(KEY_MEM) || "";
+}
+function clearKey() {
+  localStorage.removeItem(KEY_MEM); sessionStorage.removeItem(KEY_MEM);
+}
+async function load(key) {
+  const r = await fetch("/me/api/me", { headers: { "Authorization": "Bearer " + key, "Accept": "application/json" } });
+  if (r.status === 401 || r.status === 403) {
+    const body = await r.json().catch(() => ({}));
+    const msg = body?.error?.message || "";
+    throw new Error(r.status === 401 ? "密钥无效或已被删除" : (msg || "这个密钥不能查询用量"));
+  }
+  if (!r.ok) throw new Error("请求失败（HTTP " + r.status + "），请稍后重试");
+  return r.json();
+}
+function showLogin(message) {
+  document.getElementById("dash").style.display = "none";
+  document.getElementById("login").style.display = "flex";
+  if (message) { errBox.textContent = message; errBox.style.display = "block"; }
+  keyInput.focus();
+}
+function showDash() {
+  document.getElementById("login").style.display = "none";
+  document.getElementById("dash").style.display = "block";
+}
+
+document.getElementById("enter").addEventListener("click", async () => {
+  const key = keyInput.value.trim();
+  if (!key) { errBox.textContent = "请输入密钥"; errBox.style.display = "block"; return; }
+  const btn = document.getElementById("enter");
+  btn.disabled = true; btn.textContent = "查询中…"; errBox.style.display = "none";
+  try {
+    const data = await load(key);
+    state.key = key; state.data = data;
+    const remember = document.getElementById("remember").checked;
+    clearKey();
+    (remember ? localStorage : sessionStorage).setItem(KEY_MEM, key);
+    showDash(); render();
+  } catch (e) {
+    errBox.textContent = e.message; errBox.style.display = "block";
+  } finally {
+    btn.disabled = false; btn.textContent = "查看用量";
+  }
+});
+keyInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("enter").click(); });
+document.getElementById("logout").addEventListener("click", () => {
+  clearKey();
+  try { sessionStorage.removeItem(KEY_MEM); localStorage.removeItem(KEY_MEM); } catch (e) {}
+  // 彻底回到未登录状态：清掉地址栏里的 k 参数并重新加载
+  location.replace(location.pathname);
+});
+
+document.querySelectorAll(".period-tabs button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".period-tabs button").forEach(b => b.classList.toggle("on", b === btn));
+    state.period = btn.dataset.period;
+    render();
+  });
+});
+
+let trendSeq = 0;
+
+async function fetchSeries(period) {
+  const r = await fetch("/me/api/usage/requests?period=" + encodeURIComponent(period), {
+    headers: { "Authorization": "Bearer " + state.key, "Accept": "application/json" }
+  });
+  if (!r.ok) throw new Error("series " + r.status);
+  const j = await r.json();
+  return Array.isArray(j.series) ? j.series : [];
+}
+
+function queueTrend(period) {
+  const seq = ++trendSeq;
+  document.getElementById("trend-note").textContent =
+    period === "today" ? "按小时统计消耗" : "按天统计消耗";
+  fetchSeries(period).then(series => {
+    if (seq !== trendSeq) return;
+    renderTrend(series, period);
+  }).catch(() => {
+    if (seq !== trendSeq) return;
+    document.getElementById("trend").innerHTML = '<div class="empty">趋势数据暂时不可用，稍后重试</div>';
+  });
+}
+
+function renderTrend(series, period) {
+  const el = document.getElementById("trend");
+  if (!series || !series.length) {
+    el.innerHTML = '<div class="empty">这个时间段还没有消耗记录</div>';
+    return;
+  }
+  const costs = series.map(s => Number(s.cost || 0));
+  const calls = series.map(s => Number(s.calls || 0));
+  if (costs.every(v => v <= 0) && calls.every(v => v <= 0)) {
+    el.innerHTML = '<div class="empty">这个时间段还没有消耗记录</div>';
+    return;
+  }
+
+  const W = 800, H = 180, topPad = 12, bottomPad = 4;
+  const n = costs.length;
+  const max = Math.max(...costs, 1e-9);
+  const usableH = H - topPad - bottomPad;
+  const xAt = i => n === 1 ? W / 2 : (i / (n - 1)) * W;
+  const yAt = v => topPad + usableH - (v / max) * usableH;
+  const pts = costs.map((v, i) => [xAt(i), yAt(v)]);
+  const linePath = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const areaPath = `M0,${H - bottomPad} L${pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L")} L${W},${H - bottomPad} Z`;
+
+  el.innerHTML = `
+    <div class="trend-chart" id="trend-chart">
+      <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="用量趋势">
+        <line x1="0" y1="${H - bottomPad}" x2="${W}" y2="${H - bottomPad}" stroke="#e2e0da" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        <path d="${areaPath}" fill="#1f6f5c" opacity="0.10"/>
+        <path d="${linePath}" fill="none" stroke="#1f6f5c" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+        <line class="trend-hover-line" id="trend-vline" x1="0" x2="0" y1="0" y2="${H}"/>
+      </svg>
+      <div class="trend-peak">峰值 ¥${(max * CNY).toFixed(2)}</div>
+      <div class="trend-tip" id="trend-tip"></div>
+    </div>
+    <div class="trend-axis">
+      <span>${esc(series[0].label || "")}</span>
+      <span>${esc(series[Math.floor(n / 2)].label || "")}</span>
+      <span>${esc(series[n - 1].label || "")}</span>
+    </div>`;
+
+  const chart = document.getElementById("trend-chart");
+  const tip = document.getElementById("trend-tip");
+  const vline = document.getElementById("trend-vline");
+  chart.addEventListener("mousemove", ev => {
+    const rect = chart.getBoundingClientRect();
+    const px = Math.min(Math.max(ev.clientX - rect.left, 0), rect.width);
+    const i = n === 1 ? 0 : Math.round(px / rect.width * (n - 1));
+    const [sx, sy] = pts[i];
+    vline.setAttribute("x1", sx);
+    vline.setAttribute("x2", sx);
+    vline.classList.add("on");
+    const s = series[i];
+    const when = period === "today" ? `${s.label}:00` : s.label;
+    tip.innerHTML = `<b>${esc(when)}</b><br>¥${(costs[i] * CNY).toFixed(2)} · ${calls[i]} 次`;
+    tip.style.left = (sx / W * rect.width) + "px";
+    tip.style.top = (sy / H * rect.height) + "px";
+    tip.classList.add("on");
+  });
+  chart.addEventListener("mouseleave", () => {
+    vline.classList.remove("on");
+    tip.classList.remove("on");
+  });
+}
+
+function render() {
+  const d = state.data; if (!d) return;
+  const u = (d.usage || {})[state.period] || {};
+  const label = { today: "今天", "7d": "近 7 天", "30d": "近 30 天" }[state.period];
+
+  // 客户看到的只是"我的用量"，不展示内部密钥名称
+  document.getElementById("kname").textContent = "我的用量";
+  const acc = document.getElementById("kaccess");
+  if (d.readOnly) {
+    acc.textContent = "只读密钥";
+    acc.className = "badge ro";
+    acc.style.display = "";
+  } else {
+    acc.style.display = "none";
+  }
+
+  document.getElementById("cost").textContent = Number(u.cost * CNY || 0).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+  document.getElementById("cost-sub").innerHTML =
+    `${label} <b>${fmtN(u.calls)}</b> 次调用 · 按标价折算 <b>$${fmtMoney(u.cost)}</b>` +
+    (u.unpriced ? ` · ${u.unpriced} 次未定价` : "");
+
+  document.getElementById("s-calls").textContent = fmtN(u.calls);
+  document.getElementById("s-in").textContent = fmtN(u.input);
+  document.getElementById("s-out").textContent = fmtN(u.output);
+  document.getElementById("s-cache").textContent = fmtN(u.cache_read);
+  const errEl = document.getElementById("s-err");
+  errEl.textContent = fmtN(u.errors);
+  errEl.className = "v" + (u.calls && u.errors / u.calls > 0.05 ? " bad" : "");
+
+  queueTrend(state.period);
+
+  const models = (d.topModels || []).slice(0, 12);
+  const max = Math.max(...models.map(m => m.cost || 0), 0.000001);
+  document.getElementById("models").innerHTML = models.length ? models.map(m =>
+    `<tr>
+      <td><div class="model-name mono">${esc(m.id)}</div><div class="bar"><i style="width:${Math.max(2, (m.cost || 0) / max * 100)}%"></i></div></td>
+      <td class="num">${fmtN(m.calls)}</td>
+      <td class="num">${fmtN(m.input)} / ${fmtN(m.output)}</td>
+      <td class="num">$${fmtMoney(m.cost)}</td>
+    </tr>`
+  ).join("") : `<tr><td colspan="4" class="empty">这个时间段还没有调用记录</td></tr>`;
+
+  const allowed = d.models || [];
+  document.getElementById("allowed").innerHTML = allowed.length
+    ? allowed.map(m => `<span class="chip">${esc((m.label || m.id).replace(/\s*·\s*routing group$/, ""))}</span>`).join("")
+    : `<span class="empty">没有限制，可使用全部模型</span>`;
+
+  const limits = d.limits || [];
+  const secL = document.getElementById("sec-limits");
+  if (limits.length) {
+    secL.style.display = "block";
+    document.getElementById("limits").innerHTML = limits.map(l => {
+      const periodText =
+        l.period === "hours" ? `${l.hours || ""} 小时`.trim()
+        : l.period === "days" ? `${l.days || ""} 天`.trim()
+        : l.period === "weeks" ? `${l.weeks || ""} 周`.trim()
+        : l.period === "months" ? `${l.months || ""} 个月`.trim()
+        : (l.period || "");
+      const hasCost = typeof l.costLimit === "number" && l.costLimit > 0;
+      const used = Number(l.cost || 0);
+      const pct = hasCost ? Math.min(100, used / l.costLimit * 100) : 0;
+      const resetText = l.reset
+        ? new Date(l.reset).toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })
+        : "";
+      const spent = l.spent ? `<span class="limit-spent">本期已用完</span>` : "";
+      return `<li>
+        <div class="limit-head">每 ${esc(periodText)}的额度${spent}</div>
+        ${hasCost ? `
+          <div class="limit-row">
+            <span class="limit-num">$${fmtMoney(used)}</span>
+            <span class="limit-of">/ $${fmtMoney(l.costLimit)}</span>
+            <span class="limit-left">剩余 <b>$${fmtMoney(l.costLeft)}</b></span>
+          </div>
+          <div class="limit-bar"><i class="${pct >= 95 ? "hot" : ""}" style="width:${Math.max(1.5, pct)}%"></i></div>` : ""}
+        <div class="limit-meta">
+          ${fmtN(l.calls)} 次调用 · ${fmtN(l.tokens)} tokens${resetText ? " · " + esc(resetText) + " 重置" : ""}
+        </div>
+      </li>`;
+    }).join("");
+  } else {
+    secL.style.display = "none";
+  }
+
+  document.getElementById("foot-meta").textContent =
+    "更新于 " + new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+}
+
+(async function init() {
+  const url = new URL(location.href);
+  const fromUrl = url.searchParams.get("k");
+  if (fromUrl) {
+    url.searchParams.delete("k");
+    history.replaceState(null, "", url.pathname + (url.search || ""));
+  }
+  const key = fromUrl || getStoredKey();
+  if (!key) { keyInput.focus(); return; }
+  try {
+    const data = await load(key);
+    state.key = key; state.data = data;
+    if (fromUrl) sessionStorage.setItem(KEY_MEM, key);
+    showDash(); render();
+  } catch (e) {
+    clearKey(); showLogin(e.message);
+  }
+})();
+</script>
+</body>
+</html>
